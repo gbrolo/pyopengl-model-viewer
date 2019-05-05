@@ -1,4 +1,5 @@
 import glm
+import math
 import numpy
 import pygame
 import logging
@@ -63,7 +64,8 @@ class Viewer:
 
     def load_camera(self):
         self.camera = glm.vec3(0, 0, 200)
-        self.camera_speed = 50
+        self.camera_speed = 10
+        self.angle = 0
 
     def gl_apply(self, node, directory_path='./models/spider/'):
         self.model = node.transformation.astype(numpy.float32)
@@ -169,11 +171,27 @@ class Viewer:
                 return False   
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    self.camera.x += self.camera_speed
-                    self.camera.z += self.camera_speed
+                    self.camera.x += self.camera_speed * math.cos(math.radians(self.angle))
+                    self.camera.z += self.camera_speed * math.sin(math.radians(self.angle))
                 elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    self.camera.x -= self.camera_speed
-                    self.camera.z -= self.camera_speed
+                    self.camera.x -= self.camera_speed * math.cos(math.radians(self.angle))
+                    self.camera.z -= self.camera_speed * math.sin(math.radians(self.angle))
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                    self.camera.z += self.camera_speed * math.cos(math.radians(self.angle))
+                    self.camera.x -= self.camera_speed * math.sin(math.radians(self.angle))
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    self.camera.z -= self.camera_speed * math.cos(math.radians(self.angle))
+                    self.camera.x += self.camera_speed * math.sin(math.radians(self.angle))
+                elif event.key == pygame.K_1:
+                    self.angle += self.camera_speed
+                    
+                    self.camera.x += self.camera_speed * math.cos(math.radians(self.angle))
+                    self.camera.z += self.camera_speed * math.sin(math.radians(self.angle))
+                elif event.key == pygame.K_2:
+                    self.angle += (-self.camera_speed)
+                    
+                    self.camera.x -= self.camera_speed * math.cos(math.radians(self.angle))
+                    self.camera.z -= self.camera_speed * math.sin(math.radians(self.angle))                                   
         return True    
 
 if __name__=='__main__':
@@ -200,10 +218,11 @@ if __name__=='__main__':
         )
 
         viewer.gl_apply(
-            viewer.obj.rootnode
+            viewer.obj.rootnode,
+            './models/spider/'
         )
 
         render = viewer.viewer_input()
-        viewer.clock.tick(15)
+        viewer.clock.tick(5)
         pygame.display.flip()
 
