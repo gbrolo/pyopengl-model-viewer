@@ -26,7 +26,7 @@ class Viewer:
         self.clock = pygame.time.Clock()
         pygame.key.set_repeat(1, 10)
 
-        glClearColor(0.0, 0.0, 0.0, 1.0)
+        glClearColor(1.0, 1.0, 1.0, 1.0)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
 
@@ -42,7 +42,7 @@ class Viewer:
         glUseProgram(self.active_shader)
 
     def load_matrixes(self):
-        self.model_matrix = glm.mat4(1)
+        self.model = glm.mat4(1)
         self.view_matrix = glm.mat4(1)
         self.projection_matrix = glm.perspective(
             glm.radians(45),
@@ -130,7 +130,7 @@ class Viewer:
             glGetUniformLocation(self.active_shader, "model"), 
             1,
             GL_FALSE, 
-            glm.value_ptr(self.model_matrix)
+            self.model
         )
 
         glUniformMatrix4fv(
@@ -193,7 +193,7 @@ if __name__=='__main__':
             GL_DEPTH_BUFFER_BIT
         )
 
-        current_view = glm.lookAt(
+        viewer.view_matrix = glm.lookAt(
             viewer.camera,
             glm.vec3(0, 0, 0),
             glm.vec3(0, 1, 0)
