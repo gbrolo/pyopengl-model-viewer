@@ -1,5 +1,5 @@
 # Open GL real time renderer
-A real time renderer that loads an OBJ file with python bindings for Open GL, that also provides camera controls and some shader manipulations.
+A real time renderer that loads an OBJ file (Hokage Office, from Naruto) with python bindings for Open GL, that also provides camera controls and some shader manipulations.
 
 ## Requirements
 You'll need the following libraries
