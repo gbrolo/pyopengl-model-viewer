@@ -32,8 +32,7 @@ class Viewer:
         glEnable(GL_TEXTURE_2D)
 
     def load_shaders(self):
-        self.vertex_shader = open('shaders/vertex_shader.shader', 'r').read()
-        self.sunny_v_shader = open('shaders/sunny_v_shader.shader', 'r').read()
+        self.vertex_shader = open('shaders/vertex_shader.shader', 'r').read()        
         self.fragment_shader = open('shaders/fragment_shader.shader', 'r').read()
 
         self.active_shader = shaders.compileProgram(
@@ -41,25 +40,17 @@ class Viewer:
             shaders.compileShader(self.fragment_shader, GL_FRAGMENT_SHADER),
         )
 
+        self.active_shader_info = 'NORMAL_VERTEX'
+
         glUseProgram(self.active_shader)
 
     def change_shader(self, shader):
+        self.active_shader_info = shader  
 
-        if (shader == 'NORMAL_VERTEX'):
-            self.active_shader = shaders.compileProgram(
-                shaders.compileShader(self.vertex_shader, GL_VERTEX_SHADER),
-                shaders.compileShader(self.fragment_shader, GL_FRAGMENT_SHADER),
-            )
-
-            glUseProgram(self.active_shader)
-
-        if (shader == 'SUNNY_VERTEX'):
-            self.active_shader = shaders.compileProgram(
-                shaders.compileShader(self.sunny_v_shader, GL_VERTEX_SHADER),
-                shaders.compileShader(self.fragment_shader, GL_FRAGMENT_SHADER),
-            )
-
-            glUseProgram(self.active_shader)
+        if shader == 'NIGHT_VERTEX':
+            glClearColor(0.0, 0.0, 0.0, 0.0)
+        else:
+            glClearColor(1.0, 1.0, 1.0, 1.0)
 
     def load_matrixes(self):
         self.model = glm.mat4(1)
@@ -86,7 +77,7 @@ class Viewer:
         self.camera_speed = 15
         self.angle = 340
 
-    def gl_apply(self, node, directory_path='./models/spider/'):
+    def gl_apply(self, node, directory_path='./models/hokage/'):
         self.model = node.transformation.astype(numpy.float32)
 
         for mesh in node.meshes:
@@ -148,21 +139,21 @@ class Viewer:
 
     def set_matrices_bindings(self, diffuse):
         glUniformMatrix4fv(
-            glGetUniformLocation(self.active_shader, "model"), 
+            glGetUniformLocation(self.active_shader, "model_matrix"), 
             1,
             GL_FALSE, 
             self.model
         )
 
         glUniformMatrix4fv(
-            glGetUniformLocation(self.active_shader, "view"), 
+            glGetUniformLocation(self.active_shader, "view_matrix"), 
             1,
             GL_FALSE, 
             glm.value_ptr(self.view_matrix)
         )
 
         glUniformMatrix4fv(
-            glGetUniformLocation(self.active_shader, "projection"), 
+            glGetUniformLocation(self.active_shader, "projection_matrix"), 
             1,
             GL_FALSE, 
             glm.value_ptr(self.projection_matrix)
@@ -175,11 +166,11 @@ class Viewer:
         )
 
         glUniform4f(
-            glGetUniformLocation(self.active_shader, "light"), 
-            -100, 
+            glGetUniformLocation(self.active_shader, "shader_light"), 
+            200 if self.active_shader_info == 'INVERTED_SUN' else -50 if self.active_shader_info == 'NIGHT_VERTEX' else -200, 
             300, 
             0, 
-            1
+            200 if self.active_shader_info == 'SUNNY_VERTEX' else -75 if self.active_shader_info == 'NIGHT_VERTEX' else 75
         )
 
     def print_camera(self):
@@ -214,19 +205,21 @@ class Viewer:
 
                     self.print_camera()
                 elif event.key == pygame.K_UP:
-                    y = self.camera.y + self.camera_speed * math.cos(math.radians(self.angle))
+                    if (-240.0 <= self.camera.z <= -90.0) or (90.0 <= self.camera.z <= 240.0):
+                        y = self.camera.y + self.camera_speed * math.cos(math.radians(self.angle))
 
-                    if (4.0 < y < 180.0):
-                        self.camera.y = y
+                        if (4.0 < y < 180.0):
+                            self.camera.y = y
 
-                    self.print_camera()
+                        self.print_camera()
                 elif event.key == pygame.K_DOWN:
-                    y = self.camera.y - self.camera_speed * math.cos(math.radians(self.angle))
+                    if (-240.0 <= self.camera.z <= -90.0) or (90.0 <= self.camera.z <= 240.0):
+                        y = self.camera.y - self.camera_speed * math.cos(math.radians(self.angle))
 
-                    if (4.0 < y < 180.0):
-                        self.camera.y = y
+                        if (4.0 < y < 180.0):
+                            self.camera.y = y
 
-                    self.print_camera()
+                        self.print_camera()
                 elif event.key == pygame.K_s:
                     z = self.camera.z + self.camera_speed * math.cos(math.radians(self.angle))
                     if (-240.0 <= z <= -90.0) or (90.0 <= z <= 240.0):
@@ -243,6 +236,10 @@ class Viewer:
                     self.change_shader('NORMAL_VERTEX')
                 elif event.key == pygame.K_2:
                     self.change_shader('SUNNY_VERTEX')
+                elif event.key == pygame.K_3:
+                    self.change_shader('NIGHT_VERTEX')
+                elif event.key == pygame.K_4:
+                    self.change_shader('INVERTED_SUN')
         return True    
 
 if __name__=='__main__':
