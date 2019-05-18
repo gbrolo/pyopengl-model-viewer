@@ -33,6 +33,7 @@ class Viewer:
 
     def load_shaders(self):
         self.vertex_shader = open('shaders/vertex_shader.shader', 'r').read()
+        self.sunny_v_shader = open('shaders/sunny_v_shader.shader', 'r').read()
         self.fragment_shader = open('shaders/fragment_shader.shader', 'r').read()
 
         self.active_shader = shaders.compileProgram(
@@ -41,6 +42,24 @@ class Viewer:
         )
 
         glUseProgram(self.active_shader)
+
+    def change_shader(self, shader):
+
+        if (shader == 'NORMAL_VERTEX'):
+            self.active_shader = shaders.compileProgram(
+                shaders.compileShader(self.vertex_shader, GL_VERTEX_SHADER),
+                shaders.compileShader(self.fragment_shader, GL_FRAGMENT_SHADER),
+            )
+
+            glUseProgram(self.active_shader)
+
+        if (shader == 'SUNNY_VERTEX'):
+            self.active_shader = shaders.compileProgram(
+                shaders.compileShader(self.sunny_v_shader, GL_VERTEX_SHADER),
+                shaders.compileShader(self.fragment_shader, GL_FRAGMENT_SHADER),
+            )
+
+            glUseProgram(self.active_shader)
 
     def load_matrixes(self):
         self.model = glm.mat4(1)
@@ -63,9 +82,9 @@ class Viewer:
         logger.info("  materials: %d" % len(obj.materials))  
 
     def load_camera(self):
-        self.camera = glm.vec3(0, 0, 200)
-        self.camera_speed = 10
-        self.angle = 0
+        self.camera = glm.vec3(14.283286094665527, 35.90460968017578, 158.73951721191406)
+        self.camera_speed = 15
+        self.angle = 340
 
     def gl_apply(self, node, directory_path='./models/spider/'):
         self.model = node.transformation.astype(numpy.float32)
@@ -163,6 +182,10 @@ class Viewer:
             1
         )
 
+    def print_camera(self):
+        camera = (self.camera.x, self.camera.y, self.camera.z)
+        print('Camera:', camera, 'Angle: ', self.angle)
+
     def viewer_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -170,28 +193,56 @@ class Viewer:
             if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
                 return False   
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    self.camera.x += self.camera_speed * math.cos(math.radians(self.angle))
-                    self.camera.z += self.camera_speed * math.sin(math.radians(self.angle))
-                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    self.camera.x -= self.camera_speed * math.cos(math.radians(self.angle))
-                    self.camera.z -= self.camera_speed * math.sin(math.radians(self.angle))
-                elif event.key == pygame.K_UP or event.key == pygame.K_w:
-                    self.camera.z += self.camera_speed * math.cos(math.radians(self.angle))
-                    self.camera.x -= self.camera_speed * math.sin(math.radians(self.angle))
-                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    self.camera.z -= self.camera_speed * math.cos(math.radians(self.angle))
-                    self.camera.x += self.camera_speed * math.sin(math.radians(self.angle))
-                elif event.key == pygame.K_1:
+                if event.key == pygame.K_LEFT:
                     self.angle += self.camera_speed
                     
-                    self.camera.x += self.camera_speed * math.cos(math.radians(self.angle))
-                    self.camera.z += self.camera_speed * math.sin(math.radians(self.angle))
-                elif event.key == pygame.K_2:
+                    x = self.camera.x + self.camera_speed * math.cos(math.radians(1/2 * self.angle))                    
+                    self.camera.x = x
+
+                    z = self.camera.z + self.camera_speed * math.sin(math.radians(1/2 * self.angle))                    
+                    self.camera.z = z
+
+                    self.print_camera()
+                elif event.key == pygame.K_RIGHT:
                     self.angle += (-self.camera_speed)
                     
-                    self.camera.x -= self.camera_speed * math.cos(math.radians(self.angle))
-                    self.camera.z -= self.camera_speed * math.sin(math.radians(self.angle))                                   
+                    x = self.camera.x - self.camera_speed * math.cos(math.radians(1/2 * self.angle))                    
+                    self.camera.x = x
+
+                    z = self.camera.z - self.camera_speed * math.sin(math.radians(1/2 * self.angle))                    
+                    self.camera.z = z
+
+                    self.print_camera()
+                elif event.key == pygame.K_UP:
+                    y = self.camera.y + self.camera_speed * math.cos(math.radians(self.angle))
+
+                    if (4.0 < y < 180.0):
+                        self.camera.y = y
+
+                    self.print_camera()
+                elif event.key == pygame.K_DOWN:
+                    y = self.camera.y - self.camera_speed * math.cos(math.radians(self.angle))
+
+                    if (4.0 < y < 180.0):
+                        self.camera.y = y
+
+                    self.print_camera()
+                elif event.key == pygame.K_s:
+                    z = self.camera.z + self.camera_speed * math.cos(math.radians(self.angle))
+                    if (-240.0 <= z <= -90.0) or (90.0 <= z <= 240.0):
+                        self.camera.z = z
+
+                    self.print_camera()
+                elif event.key == pygame.K_w:
+                    z = self.camera.z - self.camera_speed * math.cos(math.radians(self.angle))
+                    if (-240.0 <= z <= -90.0) or (90.0 <= z <= 240.0):
+                        self.camera.z = z
+
+                    self.print_camera()
+                elif event.key == pygame.K_1:
+                    self.change_shader('NORMAL_VERTEX')
+                elif event.key == pygame.K_2:
+                    self.change_shader('SUNNY_VERTEX')
         return True    
 
 if __name__=='__main__':
@@ -200,7 +251,7 @@ if __name__=='__main__':
     viewer.pygame_init()
     viewer.load_shaders()
     viewer.load_matrixes()
-    viewer.load_object('./models/spider/spider.obj')
+    viewer.load_object('./models/hokage/office_2.obj')
     viewer.load_camera()    
 
     render = True
@@ -213,16 +264,16 @@ if __name__=='__main__':
 
         viewer.view_matrix = glm.lookAt(
             viewer.camera,
-            glm.vec3(0, 0, 0),
-            glm.vec3(0, 1, 0)
+            glm.vec3(10, 10, 0),
+            glm.vec3(0, 50, 0)
         )
 
         viewer.gl_apply(
             viewer.obj.rootnode,
-            './models/spider/'
+            './models/hokage/'
         )
 
         render = viewer.viewer_input()
-        viewer.clock.tick(5)
+        viewer.clock.tick(30)
         pygame.display.flip()
 
